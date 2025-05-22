@@ -1,11 +1,21 @@
+import { useState } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Map, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
-import type { LineLayerSpecification } from 'react-map-gl/maplibre';
+import {
+  Map,
+  Source,
+  Layer,
+  NavigationControl,
+  Marker,
+} from 'react-map-gl/maplibre';
+import type {
+  LineLayerSpecification,
+  MapLayerMouseEvent,
+} from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import Pin from '@/assets/Pin';
 
 const MAP_CENTER = { lon: 23.760830296, lat: 61.498164674 };
 
@@ -43,6 +53,19 @@ const routeLine: LineLayerSpecification = {
 
 const RouteMap = () => {
   const [routeLength, setRouteLength] = useState(5);
+  const [markerVisible, setMarkerVisible] = useState(false);
+  const [startingPoint, setStartingPoint] = useState({
+    longitude: 0,
+    latitude: 0,
+  });
+
+  const setStartingMarker = (e: MapLayerMouseEvent) => {
+    setStartingPoint({
+      longitude: e.lngLat.lng,
+      latitude: e.lngLat.lat,
+    });
+    setMarkerVisible(true);
+  };
 
   return (
     <div>
@@ -58,7 +81,7 @@ const RouteMap = () => {
           />
         </div>
         <div className='margin-auto mt-2'>
-          <Button className='mr-4' variant='outline'>
+          <Button className='mr-4' variant='outline' disabled={!markerVisible}>
             Generate Route
           </Button>
           <Button variant='outline'>Clear Route</Button>
@@ -72,7 +95,21 @@ const RouteMap = () => {
         }}
         style={{ width: '100%', height: '100vh' }}
         mapStyle='https://tiles.stadiamaps.com/styles/alidade_smooth.json'
+        cursor='crosshair'
+        onClick={(e) => {
+          setStartingMarker(e);
+        }}
       >
+        {markerVisible} && (
+        <Marker
+          longitude={startingPoint.longitude}
+          latitude={startingPoint.latitude}
+          style={{ cursor: 'crosshair' }}
+          anchor='bottom'
+        >
+          <Pin />
+        </Marker>
+        )
         <NavigationControl position='bottom-left' />
         <Source id='route-data' type='geojson' data={geojson}>
           <Layer {...routeLine} />
